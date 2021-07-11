@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 import requests
-
+import pandas as pd
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -16,6 +16,7 @@ class downloader:
         self.mainlink=mainlink
         self.st=st
         self.end=end
+        self.all_download_links=[]
     
     
     ##
@@ -100,12 +101,14 @@ class downloader:
         print(self.FourShared_ids)
         
     def start(self):
+        all_download_links=[]
         mainlink=self.mainlink
         print('getting eps //')
         eps=self.get_all_eps(mainlink)
         epsNeeded=eps[int(self.st)-1:int(self.end)]
         print('looping ..')
         for ep in epsNeeded:
+            download={}
             print('scraping ep : {}'.format(ep['name']))
             print(ep['link'])
             response = requests.get(ep['link'], headers=headers)
@@ -132,7 +135,36 @@ class downloader:
                 #
                 iframe=self.find_iframe(bestId,soup)
                 print('getting download link')
-                download=self.get_download_link(iframe)
-                print(download)
+                download_link=self.get_download_link(iframe)
+                download['name']=ep['name']
+                download['link']=download_link
+                all_download_links.append(download)
+                self.all_download_links=all_download_links
+                print(download_link)
                 print('\n')
                 print('\n')
+        return all_download_links
+    
+    def to_csv(self,export=False,csvname='export.csv'):
+        data={"count":0,'result':''}
+        if len(self.all_download_links)==0:
+            print('starting ..')
+            self.start()
+            if len(self.all_download_links) == 0:
+                print('No download link found')
+                return data
+            else:
+                print('found')
+                data['count']=len(self.all_download_links)
+                df=pd.DataFrame(self.all_download_links)
+                if export==False:
+                    data['result']=df.to_csv()
+                else:
+                    data['result']=df.to_csv()
+                    df.to_csv(csvname)
+        else:
+            print('data already generated')
+            data['count']=len(self.all_download_links)
+            df=pd.DataFrame(self.all_download_links)
+            data['result']=df.to_csv()
+        return data
