@@ -20,8 +20,8 @@ class downloader:
     
     
     ##
-    def get_all_eps(self,mainlink):
-        res=requests.get(mainlink,headers=headers)
+    def get_all_eps(self):
+        res=requests.get(self.mainlink,headers=headers)
         sp=BeautifulSoup(res.text,'html.parser')
 
         wdgts=sp.find_all('div',{'class':'Wdgt AABox'})
@@ -102,9 +102,8 @@ class downloader:
         
     def start(self):
         all_download_links=[]
-        mainlink=self.mainlink
         print('getting eps //')
-        eps=self.get_all_eps(mainlink)
+        eps=self.get_all_eps()
         epsNeeded=eps[int(self.st)-1:int(self.end)]
         print('looping ..')
         for ep in epsNeeded:
